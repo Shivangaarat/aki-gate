@@ -39,6 +39,10 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);min-height:100vh;color
 .screen{display:none;padding:18px 16px 56px;max-width:480px;margin:0 auto;}
 .screen.active{display:block;}
 
+/* slide animation between steps */
+@keyframes slideIn{from{opacity:0;transform:translateX(32px);}to{opacity:1;transform:translateX(0);}}
+.screen.active{animation:slideIn .3s ease;}
+
 .scan-badge{border-radius:10px;padding:12px 15px;display:flex;align-items:center;gap:10px;margin-bottom:20px;}
 .scan-badge.s1{background:var(--teall);border:1px solid var(--teal);}
 .scan-badge.s2{background:var(--amberl);border:1px solid var(--amber);}
@@ -56,10 +60,12 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);min-height:100vh;color
 .scan-badge.s3 .sb-main{color:var(--blued);}
 .scan-badge.s3 .sb-sub{color:#2A5090;}
 
-/* pre-fill pill shown on scan 2 */
-.prefill{background:var(--navy2);border-radius:10px;padding:11px 14px;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
-.prefill-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);flex-shrink:0;}
-.prefill-txt{font-size:12px;color:#7BAFDE;}
+/* vehicle summary pill shown on step 2 */
+.vehicle-pill{background:var(--navy2);border-radius:10px;padding:12px 15px;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+.vp-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);flex-shrink:0;}
+.vp-info{}
+.vp-plate{font-size:14px;font-weight:700;color:#fff;}
+.vp-sub{font-size:11px;color:#7BAFDE;margin-top:2px;}
 
 .field{margin-bottom:16px;}
 .field label{display:block;font-size:10px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
@@ -92,7 +98,15 @@ hr{border:none;border-top:1px solid var(--border);margin:18px 0;}
 
 .err{background:var(--redl);border:1px solid var(--red);border-radius:8px;padding:10px 13px;font-size:13px;color:#791F1F;margin-bottom:12px;display:none;}
 
-/* trip card on scan 3 */
+/* next-step prompt */
+.next-prompt{border-radius:12px;padding:18px 16px;margin:0 0 16px;text-align:center;}
+.next-prompt.blue{background:var(--bluel);border:1px solid var(--blue);}
+.np-icon{font-size:28px;margin-bottom:8px;}
+.np-title{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;letter-spacing:.5px;margin-bottom:4px;}
+.next-prompt.blue .np-title{color:var(--blued);}
+.np-sub{font-size:12px;color:var(--muted);line-height:1.6;}
+
+/* trip card scan 3 */
 .tcard{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:18px;}
 .tcard-hdr{background:var(--navy);padding:9px 15px;font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6A9EBE;}
 .trow{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;border-bottom:1px solid var(--bg);font-size:14px;}
@@ -101,34 +115,19 @@ hr{border:none;border-top:1px solid var(--border);margin:18px 0;}
 .tv{font-weight:700;}
 .tv.hc{color:var(--blued);}
 .tv.nhc{color:var(--amberd);}
-
 .away-tag{display:inline-block;background:var(--amberl);border:1px solid var(--amber);border-radius:20px;padding:5px 14px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--amberd);margin:4px 0 16px;}
 
-/* success / prompt screens */
+/* success */
 .succ{text-align:center;padding:28px 0 8px;}
 .sicon{width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:32px;}
-.sicon.s1{background:var(--teall);border:2px solid var(--teal);}
 .sicon.s2{background:var(--amberl);border:2px solid var(--amber);}
 .sicon.s3{background:var(--bluel);border:2px solid var(--blue);}
 .stitle{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;letter-spacing:1px;margin-bottom:6px;}
-.stitle.s1{color:var(--teald);}
 .stitle.s2{color:var(--amberd);}
 .stitle.s3{color:var(--blued);}
 .ssub{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:20px;}
-
-/* next-step prompt box */
-.next-prompt{border-radius:12px;padding:18px 16px;margin:0 0 16px;text-align:center;}
-.next-prompt.amber{background:var(--amberl);border:1px solid var(--amber);}
-.next-prompt.blue{background:var(--bluel);border:1px solid var(--blue);}
-.np-icon{font-size:28px;margin-bottom:8px;}
-.np-title{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;letter-spacing:.5px;margin-bottom:4px;}
-.next-prompt.amber .np-title{color:var(--amberd);}
-.next-prompt.blue .np-title{color:var(--blued);}
-.np-sub{font-size:12px;color:var(--muted);line-height:1.6;}
-
 .sc{background:var(--white);border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-bottom:16px;text-align:left;}
 .sc-hdr{padding:8px 15px;font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}
-.sc-hdr.s1{background:var(--teall);color:var(--teald);}
 .sc-hdr.s2{background:var(--amberl);color:var(--amberd);}
 .sc-hdr.s3{background:var(--bluel);color:var(--blued);}
 .dur-pill{display:inline-flex;align-items:center;gap:6px;background:var(--teall);border:1px solid var(--teal);border-radius:20px;padding:6px 15px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--teald);margin-bottom:16px;}
@@ -156,11 +155,11 @@ hr{border:none;border-top:1px solid var(--border);margin:18px 0;}
 
 <div class="overlay" id="overlay"><div class="spin"></div><div class="spin-txt">Saving...</div></div>
 
-<!-- ── SCAN 1: ENTRY FORM ── -->
+<!-- ══ STEP 1: ENTRY FORM ══ -->
 <div class="screen active" id="s1">
   <div class="scan-badge s1">
     <div class="sb-dot"></div>
-    <div><div class="sb-main">Scan 1 of 3 — Entry</div><div class="sb-sub">Enter vehicle and vendor. Loading begins after this.</div></div>
+    <div><div class="sb-main">Step 1 — Entry</div><div class="sb-sub">Enter vehicle and vendor. Loading begins after this.</div></div>
   </div>
   <div class="field"><label>Vehicle Plate Number *</label>
     <input id="f-plate" type="text" placeholder="e.g. DUBAI A 12345" autocomplete="off" oninput="this.value=this.value.toUpperCase()" maxlength="20">
@@ -181,32 +180,22 @@ hr{border:none;border-top:1px solid var(--border);margin:18px 0;}
   <button class="btn teal" onclick="submitScan1()">LOG ENTRY — PROCEED TO LOADING</button>
 </div>
 
-<!-- ── SCAN 1 SUCCESS + NEXT STEP PROMPT ── -->
-<div class="screen" id="ok1">
-  <div class="succ">
-    <div class="sicon s1">✓</div>
-    <div class="stitle s1">ENTRY LOGGED</div>
-    <p class="ssub">Your entry has been recorded.<br>Proceed to the loading bay.</p>
-    <div class="sc"><div class="sc-hdr s1">Entry record</div><div id="ok1-rows"></div></div>
-  </div>
-  <div class="next-prompt amber">
-    <div class="np-icon">📲</div>
-    <div class="np-title">NEXT: Scan QR again after loading</div>
-    <div class="np-sub">Once your vehicle is loaded and you're ready to leave,<br>scan the QR code at the exit gate to enter your route details.</div>
-  </div>
-  <button class="ghost" onclick="notMyVehicle()">Wrong entry? Start over →</button>
-</div>
-
-<!-- ── SCAN 2: EXIT FORM (route + dept + city) ── -->
+<!-- ══ STEP 2: EXIT FORM (auto-shown after step 1) ══ -->
 <div class="screen" id="s2">
   <div class="scan-badge s2">
     <div class="sb-dot"></div>
-    <div><div class="sb-main">Scan 2 of 3 — Exit</div><div class="sb-sub">Loading complete. Add route details and head out.</div></div>
+    <div><div class="sb-main">Step 2 — Exit details</div><div class="sb-sub">Vehicle loaded. Enter route details before heading out.</div></div>
   </div>
-  <div class="prefill">
-    <div class="prefill-dot"></div>
-    <div class="prefill-txt" id="s2-pill">Loading entry details...</div>
+
+  <!-- Vehicle pre-fill pill -->
+  <div class="vehicle-pill">
+    <div class="vp-dot"></div>
+    <div class="vp-info">
+      <div class="vp-plate" id="s2-plate">—</div>
+      <div class="vp-sub" id="s2-sub">—</div>
+    </div>
   </div>
+
   <div class="field"><label>Route Number *</label>
     <input id="f-route" type="text" placeholder="e.g. R-042" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
   </div>
@@ -234,31 +223,31 @@ hr{border:none;border-top:1px solid var(--border);margin:18px 0;}
   <button class="ghost" onclick="notMyVehicle()">Wrong vehicle? Start over →</button>
 </div>
 
-<!-- ── SCAN 2 SUCCESS + NEXT STEP PROMPT ── -->
+<!-- ══ EXIT SUCCESS + SCAN PROMPT ══ -->
 <div class="screen" id="ok2">
   <div class="succ">
     <div class="sicon s2">🚛</div>
     <div class="stitle s2">EXIT LOGGED</div>
-    <p class="ssub">Safe trip! Your route details have been saved.</p>
+    <p class="ssub">Safe trip! All details saved.</p>
     <div class="sc"><div class="sc-hdr s2">Exit record</div><div id="ok2-rows"></div></div>
   </div>
   <div class="next-prompt blue">
     <div class="np-icon">📲</div>
-    <div class="np-title">NEXT: Scan QR when you return</div>
-    <div class="np-sub">After completing your deliveries, scan the QR code<br>at the entry gate to record your return time.</div>
+    <div class="np-title">SCAN QR WHEN YOU RETURN</div>
+    <div class="np-sub">After completing your deliveries, scan the QR code at the gate to record your return time. Your trip data is saved.</div>
   </div>
   <button class="ghost" onclick="notMyVehicle()">Wrong entry? Start over →</button>
 </div>
 
-<!-- ── SCAN 3: RETURN CONFIRM ── -->
+<!-- ══ STEP 3: RETURN CONFIRM (auto-shown on scan 2) ══ -->
 <div class="screen" id="s3">
   <div style="text-align:center;padding:8px 0 20px;">
     <div style="width:70px;height:70px;border-radius:50%;background:var(--bluel);border:2px solid var(--blue);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:30px;">🏁</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;letter-spacing:1px;color:var(--blued);">DELIVERY COMPLETE</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;letter-spacing:1px;color:var(--blued);">WELCOME BACK</div>
     <div style="font-size:13px;color:var(--muted);margin-top:4px;">Confirm return — no details needed.</div>
   </div>
   <div class="tcard">
-    <div class="tcard-hdr">Your trip — recorded at exit</div>
+    <div class="tcard-hdr">Your trip details</div>
     <div class="trow"><span class="tl">Vehicle</span><span class="tv" id="r3-plate">—</span></div>
     <div class="trow"><span class="tl">Driver</span><span class="tv" id="r3-driver">—</span></div>
     <div class="trow"><span class="tl">Vendor</span><span class="tv" id="r3-vendor">—</span></div>
@@ -274,7 +263,7 @@ hr{border:none;border-top:1px solid var(--border);margin:18px 0;}
   <button class="ghost" onclick="notMyVehicle()">Not my trip? Start over →</button>
 </div>
 
-<!-- ── SCAN 3 SUCCESS ── -->
+<!-- ══ RETURN SUCCESS ══ -->
 <div class="screen" id="ok3">
   <div class="succ">
     <div class="sicon s3">✅</div>
@@ -310,45 +299,37 @@ function getT(){try{const r=localStorage.getItem('aki_t');if(!r)return null;cons
 function saveT(t){localStorage.setItem('aki_t',JSON.stringify(t));}
 function clearT(){localStorage.removeItem('aki_t');}
 
-// ── ON LOAD: detect which scan this is ──
-// Each scan is a fresh page load — detect phase from saved state
+// ── ON LOAD ──
+// Only 2 possible states on page load:
+// 1. No saved trip OR phase 1/2 → show entry (fresh start)
+// 2. Phase 3 (exit done, awaiting return scan) → show return screen
 window.addEventListener('DOMContentLoaded',()=>{
   const t=getT();
-
-  if(!t){
-    // No saved trip — fresh entry
-    go('s1'); setStep(1);
-    return;
-  }
-
-  if(t.phase===2){
-    // Scan 1 done, this is Scan 2 — show exit form with pre-fill
-    document.getElementById('s2-pill').textContent=
-      `${t.scan1.plate} · ${t.scan1.driver} · ${t.scan1.vendor} · Entry: ${t.scan1.entryDisplay.slice(0,19)}`;
-    go('s2'); setStep(2);
-    return;
-  }
-
-  if(t.phase===3){
-    // Scan 2 done, this is Scan 3 — show return confirm
-    populateScan3(t.scan1, t.scan2);
+  if(t && t.phase===3){
+    // Driver has scanned QR after delivery — show return confirm
+    populateScan3(t.scan1,t.scan2);
     go('s3'); setStep(3);
     startAwayCounter(t.scan1.entryISO);
-    return;
+  } else {
+    // Fresh start or mid-flow interrupted — start from entry
+    go('s1'); setStep(1);
+    clearT();
   }
-
-  clearT(); go('s1'); setStep(1);
 });
 
-// ── SCAN 1: ENTRY ──
+// ── STEP 1: ENTRY ──
 function submitScan1(){
   const plate=document.getElementById('f-plate').value.trim().toUpperCase();
   const driver=document.getElementById('f-driver').value.trim();
   const vendor=document.getElementById('f-vendor').value;
   const err=document.getElementById('e1');
   err.style.display='none';
-  if(!plate||!driver||!vendor){err.textContent='Please fill in vehicle plate, driver name, and vendor.';err.style.display='block';err.scrollIntoView({behavior:'smooth',block:'nearest'});return;}
-
+  if(!plate||!driver||!vendor){
+    err.textContent='Please fill in vehicle plate, driver name, and vendor.';
+    err.style.display='block';
+    err.scrollIntoView({behavior:'smooth',block:'nearest'});
+    return;
+  }
   const now=gst();
   const scan1={plate,driver,vendor,entryISO:now.toISOString(),entryDisplay:full(now)};
   const tripId=`TRIP-${plate.replace(/\s/g,'')}-${now.getUTCFullYear()}${p(now.getUTCMonth()+1)}${p(now.getUTCDate())}-${p(now.getUTCHours())}${p(now.getUTCMinutes())}`;
@@ -359,14 +340,14 @@ function submitScan1(){
   post({action:'entry',tripId,plate,driver,vendor,entryTimestamp:scan1.entryDisplay})
   .finally(()=>{
     loading(false);
-    document.getElementById('ok1-rows').innerHTML=rows([
-      ['Time',scan1.entryDisplay],['Vehicle',plate],['Driver',driver],['Vendor',vendor],['Trip ID',tripId]
-    ]);
-    go('ok1'); setStep(1);
+    // Auto-advance to exit form — populate vehicle pill
+    document.getElementById('s2-plate').textContent=plate;
+    document.getElementById('s2-sub').textContent=`${driver} · ${vendor} · Entry: ${scan1.entryDisplay.slice(0,19)}`;
+    go('s2'); setStep(2);
   });
 }
 
-// ── SCAN 2: EXIT ──
+// ── STEP 2: EXIT ──
 function selDept(d){dept=d;document.getElementById('dHC').classList.toggle('on',d==='HC');document.getElementById('dNHC').classList.toggle('on',d==='NHC');}
 function selCity(btn){document.querySelectorAll('.cbtn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');city=btn.textContent.trim();}
 
@@ -375,35 +356,41 @@ function submitScan2(){
   const route=document.getElementById('f-route').value.trim().toUpperCase();
   const err=document.getElementById('e2');
   err.style.display='none';
-  if(!route||!dept||!city){err.textContent='Please fill in route number, select department and city.';err.style.display='block';err.scrollIntoView({behavior:'smooth',block:'nearest'});return;}
-
+  if(!route||!dept||!city){
+    err.textContent='Please fill in route number, select department and city.';
+    err.style.display='block';
+    err.scrollIntoView({behavior:'smooth',block:'nearest'});
+    return;
+  }
   const now=gst();
   const scan2={route,dept,city,exitISO:now.toISOString(),exitDisplay:full(now)};
   t.scan2=scan2; t.phase=3; saveT(t);
 
   loading(true);
-  post({action:'exit',tripId:t.tripId,plate:t.scan1.plate,driver:t.scan1.driver,vendor:t.scan1.vendor,route,dept,city,exitTimestamp:scan2.exitDisplay})
+  post({action:'exit',tripId:t.tripId,plate:t.scan1.plate,driver:t.scan1.driver,
+    vendor:t.scan1.vendor,route,dept,city,exitTimestamp:scan2.exitDisplay})
   .finally(()=>{
     loading(false);
     document.getElementById('ok2-rows').innerHTML=rows([
-      ['Time',scan2.exitDisplay],['Vehicle',t.scan1.plate],['Driver',t.scan1.driver],
-      ['Vendor',t.scan1.vendor],['Route',route],['Department',dept],['City',city],['Trip ID',t.tripId]
+      ['Vehicle',t.scan1.plate],['Driver',t.scan1.driver],['Vendor',t.scan1.vendor],
+      ['Route',route],['Department',dept],['City',city],
+      ['Entry time',t.scan1.entryDisplay.slice(0,19)],['Exit time',scan2.exitDisplay.slice(0,19)]
     ]);
     go('ok2'); setStep(2);
   });
 }
 
-// ── SCAN 3: RETURN ──
+// ── STEP 3: RETURN ──
 function populateScan3(s1,s2){
   document.getElementById('r3-plate').textContent=s1.plate;
   document.getElementById('r3-driver').textContent=s1.driver;
   document.getElementById('r3-vendor').textContent=s1.vendor;
   document.getElementById('r3-route').textContent=s2.route;
-  document.getElementById('r3-entry').textContent=s1.entryDisplay.slice(0,19);
-  document.getElementById('r3-exit').textContent=s2.exitDisplay.slice(0,19);
   const dEl=document.getElementById('r3-dept');
   dEl.textContent=s2.dept; dEl.className='tv '+(s2.dept==='HC'?'hc':'nhc');
   document.getElementById('r3-city').textContent=s2.city;
+  document.getElementById('r3-entry').textContent=s1.entryDisplay.slice(0,19);
+  document.getElementById('r3-exit').textContent=s2.exitDisplay.slice(0,19);
 }
 
 let awayTimer=null;
@@ -420,13 +407,14 @@ function submitScan3(){
   const totalMs=Date.now()-new Date(t.scan1.entryISO).getTime();
   const delivMs=Date.now()-new Date(t.scan2.exitISO).getTime();
   const fmtDur=ms=>{const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000);return h>0?`${h}h ${m}m`:`${m}m`;};
-  const totalDur=fmtDur(totalMs), delivDur=fmtDur(delivMs);
+  const totalDur=fmtDur(totalMs),delivDur=fmtDur(delivMs);
 
   loading(true);
-  post({action:'return',tripId:t.tripId,plate:t.scan1.plate,driver:t.scan1.driver,vendor:t.scan1.vendor,
-    route:t.scan2.route,dept:t.scan2.dept,city:t.scan2.city,
+  post({action:'return',tripId:t.tripId,plate:t.scan1.plate,driver:t.scan1.driver,
+    vendor:t.scan1.vendor,route:t.scan2.route,dept:t.scan2.dept,city:t.scan2.city,
     entryTimestamp:t.scan1.entryDisplay,exitTimestamp:t.scan2.exitDisplay,returnTimestamp:retDisplay,
-    totalDurationHrs:Math.round((totalMs/3600000)*100)/100,delivDurationHrs:Math.round((delivMs/3600000)*100)/100,
+    totalDurationHrs:Math.round((totalMs/3600000)*100)/100,
+    delivDurationHrs:Math.round((delivMs/3600000)*100)/100,
     totalDuration:totalDur,delivDuration:delivDur})
   .finally(()=>{
     loading(false); clearT();
