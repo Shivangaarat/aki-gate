@@ -331,7 +331,7 @@ function submitScan1(){
     return;
   }
   const now=gst();
-  const scan1={plate,driver,vendor,entryISO:now.toISOString(),entryDisplay:full(now)};
+  const scan1={plate,driver,vendor,entryISO:new Date().toISOString(),entryDisplay:full(now)};
   const tripId=`TRIP-${plate.replace(/\s/g,'')}-${now.getUTCFullYear()}${p(now.getUTCMonth()+1)}${p(now.getUTCDate())}-${p(now.getUTCHours())}${p(now.getUTCMinutes())}`;
   const trip={phase:2,tripId,scan1};
   saveT(trip);
@@ -363,7 +363,7 @@ function submitScan2(){
     return;
   }
   const now=gst();
-  const scan2={route,dept,city,exitISO:now.toISOString(),exitDisplay:full(now)};
+  const scan2={route,dept,city,exitISO:new Date().toISOString(),exitDisplay:full(now)};
   t.scan2=scan2; t.phase=3; saveT(t);
 
   loading(true);
