@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AKI Gate</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800;900&display=swap');
+
+:root {
+  --navy:       #07111F;
+  --navy2:      #0D1E30;
+  --navymid:    #1A3A5C;
+  --teal:       #1D9E75;
+  --teald:      #0F6E56;
+  --teall:      #E1F5EE;
+  --amber:      #EF9F27;
+  --amberd:     #BA7517;
+  --amberl:     #FAEEDA;
+  --blue:       #378ADD;
+  --bluel:      #E6F1FB;
+  --blued:      #0C447C;
+  --red:        #E24B4A;
+  --redl:       #FCEBEB;
+  --text:       #0F1E2D;
+  --muted:      #5A6A7A;
+  --border:     #CDD8E3;
+  --bg:         #F2F5F8;
+  --white:      #fff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'Barlow', sans-serif; background: var(--bg); min-height: 100vh; color: var(--text); }
+
+/* ── HEADER ── */
+.hdr {
+  background: var(--navy); padding: 13px 16px;
+  display: flex; align-items: center; gap: 11px;
+  position: sticky; top: 0; z-index: 20;
+}
+.hlogo {
+  width: 36px; height: 36px; background: var(--teal); border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 13px; color: #fff; letter-spacing: 1px;
+}
+.htxt   { flex: 1; }
+.htitle { color: #fff; font-size: 14px; font-weight: 700; }
+.hsub   { color: #6A9EBE; font-size: 10px; margin-top: 1px; }
+.hclock { text-align: right; }
+.htime  { color: var(--teal); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: 1px; }
+.hdate  { color: #4A7090; font-size: 10px; margin-top: 1px; }
+
+/* ── STEP INDICATOR ── */
+.steps {
+  background: var(--navy2); padding: 0 16px;
+  display: flex; align-items: center; gap: 0;
+}
+.step-item {
+  flex: 1; padding: 10px 0;
+  text-align: center; position: relative;
+}
+.step-item:not(:last-child)::after {
+  content: ''; position: absolute;
+  right: 0; top: 50%; transform: translateY(-50%);
+  width: 1px; height: 60%; background: var(--navymid);
+}
+.step-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 1.5px solid var(--navymid);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  margin-bottom: 3px;
+}
+.step-lbl { font-size: 9.5px; color: var(--muted); font-weight: 600; letter-spacing: 0.5px; display: block; }
+
+.step-item.done .step-num { background: var(--teald); border-color: var(--teal); color: #fff; }
+.step-item.done .step-lbl { color: var(--teal); }
+.step-item.active .step-num { background: var(--teal); border-color: var(--teal); color: #fff; }
+.step-item.active .step-lbl { color: #fff; }
+
+/* ── SCREENS ── */
+.screen { display: none; padding: 18px 16px 56px; max-width: 480px; margin: 0 auto; }
+.screen.active { display: block; }
+
+/* ── SCAN BADGE ── */
+.scan-badge {
+  border-radius: 10px; padding: 12px 15px;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+}
+.scan-badge.s1 { background: var(--teall);  border: 1px solid var(--teal); }
+.scan-badge.s2 { background: var(--amberl); border: 1px solid var(--amber); }
+.scan-badge.s3 { background: var(--bluel);  border: 1px solid var(--blue); }
+.sb-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.scan-badge.s1 .sb-dot { background: var(--teal); }
+.scan-badge.s2 .sb-dot { background: var(--amber); }
+.scan-badge.s3 .sb-dot { background: var(--blue); }
+.sb-main { font-size: 13px; font-weight: 700; }
+.sb-sub  { font-size: 11px; margin-top: 2px; }
+.scan-badge.s1 .sb-main { color: var(--teald); }
+.scan-badge.s1 .sb-sub  { color: #3B8060; }
+.scan-badge.s2 .sb-main { color: var(--amberd); }
+.scan-badge.s2 .sb-sub  { color: #7A5010; }
+.scan-badge.s3 .sb-main { color: var(--blued); }
+.scan-badge.s3 .sb-sub  { color: #2A5090; }
+
+/* ── FIELDS ── */
+.field { margin-bottom: 16px; }
+.field label {
+  display: block; font-size: 10px; font-weight: 700;
+  letter-spacing: 1.3px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+}
+input, select {
+  width: 100%; padding: 13px 14px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  font-family: 'Barlow', sans-serif; font-size: 16px; color: var(--text);
+  background: var(--white); outline: none;
+  transition: border-color .18s, box-shadow .18s; -webkit-appearance: none;
+}
+input:focus, select:focus {
+  border-color: var(--teal); box-shadow: 0 0 0 3px rgba(29,158,117,.13);
+}
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%235A6A7A' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center; padding-right: 38px;
+}
+
+/* ── DEPT TOGGLE ── */
+.dtog { display: flex; gap: 10px; }
+.dbtn {
+  flex: 1; padding: 13px 8px;
+  border: 2px solid var(--border); border-radius: 10px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 800;
+  cursor: pointer; background: var(--white); color: var(--muted); transition: all .15s; text-align: center;
+}
+.dbtn span { font-size: 10px; font-weight: 500; display: block; margin-top: 2px; opacity: .7; letter-spacing: 0; }
+.dbtn.hc.on  { background: var(--bluel);  border-color: var(--blue);   color: var(--blued); }
+.dbtn.nhc.on { background: var(--amberl); border-color: var(--amberd); color: var(--amberd); }
+
+/* ── CITY GRID ── */
+.cgrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.cbtn {
+  padding: 11px 4px; border: 1.5px solid var(--border); border-radius: 8px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; background: var(--white); color: var(--muted); text-align: center; transition: all .15s;
+}
+.cbtn.on { background: var(--teall); border-color: var(--teal); color: var(--teald); }
+
+/* ── DIVIDER ── */
+hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+
+/* ── BUTTONS ── */
+.btn {
+  width: 100%; padding: 15px; border: none; border-radius: 11px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 19px; font-weight: 800; letter-spacing: 1.2px;
+  cursor: pointer; transition: all .18s;
+}
+.btn.teal  { background: var(--teal);  color: #fff; }
+.btn.teal:hover  { background: var(--teald); }
+.btn.amber { background: var(--amber); color: var(--navy); }
+.btn.amber:hover { background: var(--amberd); color: #fff; }
+.btn.blue  { background: var(--blue);  color: #fff; }
+.btn.blue:hover  { background: var(--blued); }
+.btn:active { transform: scale(.98); }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.ghost {
+  width: 100%; padding: 11px; border: 1.5px solid var(--border); border-radius: 10px;
+  font-family: 'Barlow', sans-serif; font-size: 13px; font-weight: 600;
+  color: var(--muted); background: none; cursor: pointer; margin-top: 10px;
+}
+
+/* ── ERROR ── */
+.err { background: var(--redl); border: 1px solid var(--red); border-radius: 8px; padding: 10px 13px; font-size: 13px; color: #791F1F; margin-bottom: 12px; display: none; }
+
+/* ── TRIP CARD (shown on scan 3) ── */
+.tcard { background: var(--white); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 18px; }
+.tcard-hdr { background: var(--navy); padding: 9px 15px; font-size: 9.5px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #6A9EBE; }
+.trow { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--bg); font-size: 14px; }
+.trow:last-child { border-bottom: none; }
+.tl { color: var(--muted); font-weight: 500; }
+.tv { font-weight: 700; }
+.tv.hc  { color: var(--blued); }
+.tv.nhc { color: var(--amberd); }
+
+/* ── RETURN HERO ── */
+.return-hero { text-align: center; padding: 8px 0 20px; }
+.return-icon {
+  width: 70px; height: 70px; border-radius: 50%;
+  background: var(--bluel); border: 2px solid var(--blue);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 12px; font-size: 30px;
+}
+.return-title { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 800; letter-spacing: 1px; color: var(--blued); }
+.return-sub   { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+.away-tag {
+  display: inline-block; background: var(--amberl); border: 1px solid var(--amber);
+  border-radius: 20px; padding: 5px 14px; font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px; font-weight: 700; color: var(--amberd); margin: 4px 0 16px;
+}
+
+/* ── SUCCESS ── */
+.succ { text-align: center; padding: 24px 0; }
+.sicon {
+  width: 76px; height: 76px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 18px; font-size: 32px;
+}
+.sicon.s1 { background: var(--teall);  border: 2px solid var(--teal); }
+.sicon.s2 { background: var(--amberl); border: 2px solid var(--amber); }
+.sicon.s3 { background: var(--bluel);  border: 2px solid var(--blue); }
+.stitle { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 800; letter-spacing: 1px; margin-bottom: 5px; }
+.stitle.s1 { color: var(--teald); }
+.stitle.s2 { color: var(--amberd); }
+.stitle.s3 { color: var(--blued); }
+.ssub { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+.sc { background: var(--white); border: 1px solid var(--border); border-radius: 11px; overflow: hidden; margin-bottom: 18px; text-align: left; }
+.sc-hdr { padding: 8px 15px; font-size: 9.5px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+.sc-hdr.s1 { background: var(--teall);  color: var(--teald); }
+.sc-hdr.s2 { background: var(--amberl); color: var(--amberd); }
+.sc-hdr.s3 { background: var(--bluel);  color: var(--blued); }
+.dur-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--teall); border: 1px solid var(--teal); border-radius: 20px;
+  padding: 6px 15px; font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px; font-weight: 700; color: var(--teald); margin-bottom: 16px;
+}
+
+/* ── LOADING ── */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(7,17,31,.65); z-index: 99; align-items: center; justify-content: center; flex-direction: column; gap: 13px; }
+.overlay.on { display: flex; }
+.spin { width: 38px; height: 38px; border: 3px solid rgba(255,255,255,.15); border-top-color: var(--teal); border-radius: 50%; animation: sp .7s linear infinite; }
+@keyframes sp { to { transform: rotate(360deg); } }
+.spin-txt { color: #fff; font-size: 13px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hlogo">AKI</div>
+  <div class="htxt">
+    <div class="htitle">Gate Check-In</div>
+    <div class="hsub">Last Mile Operations</div>
+  </div>
+  <div class="hclock">
+    <div class="htime" id="ct">--:--</div>
+    <div class="hdate" id="cd">---</div>
+  </div>
+</div>
+
+<!-- STEP INDICATORS -->
+<div class="steps" id="stepBar">
+  <div class="step-item active" id="si1">
+    <div class="step-num">1</div>
+    <span class="step-lbl">ENTRY</span>
+  </div>
+  <div class="step-item" id="si2">
+    <div class="step-num">2</div>
+    <span class="step-lbl">EXIT</span>
+  </div>
+  <div class="step-item" id="si3">
+    <div class="step-num">3</div>
+    <span class="step-lbl">RETURN</span>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="overlay" id="overlay"><div class="spin"></div><div class="spin-txt">Saving...</div></div>
+
+<!-- ══════════════════════════════════════
+     SCAN 1 — ENTRY
+     Driver arrives at premise gate
+════════════════════════════════════════ -->
+<div class="screen active" id="s1">
+  <div class="scan-badge s1">
+    <div class="sb-dot"></div>
+    <div>
+      <div class="sb-main">Scan 1 of 3 — Entry</div>
+      <div class="sb-sub">Enter vehicle and select vendor. Loading begins after this.</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Vehicle Plate Number *</label>
+    <input id="f-plate" type="text" placeholder="e.g. DUBAI A 12345" autocomplete="off"
+      oninput="this.value=this.value.toUpperCase()" maxlength="20">
+  </div>
+
+  <div class="field">
+    <label>Driver Name *</label>
+    <input id="f-driver" type="text" placeholder="Full name" autocomplete="off">
+  </div>
+
+  <div class="field">
+    <label>Vendor / Transporter *</label>
+    <select id="f-vendor">
+      <option value="">— Select vendor —</option>
+      <option>Al Futtaim Logistics</option>
+      <option>Aramex</option>
+      <option>Barloworld Transport</option>
+      <option>DHL Supply Chain</option>
+      <option>GAC Logistics</option>
+      <option>Imdaad</option>
+      <option>Jeena & Company</option>
+      <option>Naqel Express</option>
+      <option>RSA Logistics</option>
+      <option>Tristar Group</option>
+      <option>Other (adhoc)</option>
+    </select>
+  </div>
+
+  <div class="err" id="e1"></div>
+  <button class="btn teal" onclick="submitScan1()">LOG ENTRY — PROCEED TO LOADING</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCAN 2 — EXIT (post-loading)
+     Driver scans after loading is done,
+     before driving out
+════════════════════════════════════════ -->
+<div class="screen" id="s2">
+  <div class="scan-badge s2">
+    <div class="sb-dot"></div>
+    <div>
+      <div class="sb-main">Scan 2 of 3 — Exit</div>
+      <div class="sb-sub">Loading complete. Enter route details and head out.</div>
+    </div>
+  </div>
+
+  <!-- Summary pill of scan 1 data -->
+  <div id="s2-summary" style="background:var(--navy2);border-radius:10px;padding:10px 14px;margin-bottom:18px;display:flex;align-items:center;gap:10px;">
+    <div style="width:8px;height:8px;border-radius:50%;background:var(--teal);flex-shrink:0;"></div>
+    <div style="font-size:12px;color:#7BAFDE;" id="s2-pill">Loading entry details...</div>
+  </div>
+
+  <div class="field">
+    <label>Route Number *</label>
+    <input id="f-route" type="text" placeholder="e.g. R-042" autocomplete="off"
+      oninput="this.value=this.value.toUpperCase()">
+  </div>
+
+  <div class="field">
+    <label>Department *</label>
+    <div class="dtog">
+      <button class="dbtn hc" id="dHC" onclick="selDept('HC')">
+        HC <span>Healthcare</span>
+      </button>
+      <button class="dbtn nhc" id="dNHC" onclick="selDept('NHC')">
+        NHC <span>Non-Healthcare</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Delivery City *</label>
+    <div class="cgrid">
+      <button class="cbtn" onclick="selCity(this)">Dubai</button>
+      <button class="cbtn" onclick="selCity(this)">Abu Dhabi</button>
+      <button class="cbtn" onclick="selCity(this)">Sharjah</button>
+      <button class="cbtn" onclick="selCity(this)">Ajman</button>
+      <button class="cbtn" onclick="selCity(this)">RAK</button>
+      <button class="cbtn" onclick="selCity(this)">Fujairah</button>
+      <button class="cbtn" onclick="selCity(this)">Al Ain</button>
+      <button class="cbtn" onclick="selCity(this)">UAQ</button>
+      <button class="cbtn" onclick="selCity(this)">Other</button>
+    </div>
+  </div>
+
+  <div class="err" id="e2"></div>
+  <button class="btn amber" onclick="submitScan2()">LOG EXIT — HEAD OUT FOR DELIVERY</button>
+  <button class="ghost" onclick="notMyVehicle()">Wrong vehicle? Start over →</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCAN 3 — RETURN
+     Driver back at premise after delivery
+════════════════════════════════════════ -->
+<div class="screen" id="s3">
+  <div class="return-hero">
+    <div class="return-icon">🏁</div>
+    <div class="return-title">DELIVERY COMPLETE</div>
+    <div class="return-sub">Confirm return — no details needed.</div>
+  </div>
+
+  <div class="tcard">
+    <div class="tcard-hdr">Your trip — recorded at exit</div>
+    <div class="trow"><span class="tl">Vehicle</span>    <span class="tv" id="r3-plate">—</span></div>
+    <div class="trow"><span class="tl">Driver</span>     <span class="tv" id="r3-driver">—</span></div>
+    <div class="trow"><span class="tl">Vendor</span>     <span class="tv" id="r3-vendor">—</span></div>
+    <div class="trow"><span class="tl">Route</span>      <span class="tv" id="r3-route">—</span></div>
+    <div class="trow"><span class="tl">Department</span> <span class="tv" id="r3-dept">—</span></div>
+    <div class="trow"><span class="tl">City</span>       <span class="tv" id="r3-city">—</span></div>
+    <div class="trow"><span class="tl">Entry time</span> <span class="tv" id="r3-entry">—</span></div>
+    <div class="trow"><span class="tl">Exit time</span>  <span class="tv" id="r3-exit">—</span></div>
+  </div>
+
+  <div style="text-align:center;">
+    <div class="away-tag" id="r3-away">Time out: calculating...</div>
+  </div>
+
+  <div class="err" id="e3"></div>
+  <button class="btn blue" onclick="submitScan3()">CONFIRM RETURN</button>
+  <button class="ghost" onclick="notMyVehicle()">Not my trip? Start over →</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     SUCCESS SCREENS
+════════════════════════════════════════ -->
+<div class="screen" id="ok1">
+  <div class="succ">
+    <div class="sicon s1">✓</div>
+    <div class="stitle s1">ENTRY LOGGED</div>
+    <p class="ssub">Proceed to loading bay.<br>Scan again at the gate when loading is complete.</p>
+    <div class="sc"><div class="sc-hdr s1">Entry record</div><div id="ok1-rows"></div></div>
+    <button class="ghost" onclick="resetAll()">Done</button>
+  </div>
+</div>
+
+<div class="screen" id="ok2">
+  <div class="succ">
+    <div class="sicon s2">🚛</div>
+    <div class="stitle s2">EXIT LOGGED</div>
+    <p class="ssub">Safe trip. Scan again when you return to premise.</p>
+    <div class="sc"><div class="sc-hdr s2">Exit record</div><div id="ok2-rows"></div></div>
+    <button class="ghost" onclick="resetAll()">Done</button>
+  </div>
+</div>
+
+<div class="screen" id="ok3">
+  <div class="succ">
+    <div class="sicon s3">✅</div>
+    <div class="stitle s3">RETURN LOGGED</div>
+    <p class="ssub">Trip complete and fully recorded.</p>
+    <div class="dur-pill" id="ok3-dur">⏱ —</div>
+    <div class="sc"><div class="sc-hdr s3">Full trip record</div><div id="ok3-rows"></div></div>
+    <button class="ghost" onclick="resetAll()">Done</button>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────
+//  CONFIG
+// ─────────────────────────────────────────────────
+const SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+
+// ─────────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────────
+let dept = '';
+let city = '';
+
+// ─────────────────────────────────────────────────
+//  CLOCK
+// ─────────────────────────────────────────────────
+const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function gst(){ return new Date(Date.now()+4*3600000); }
+function ftime(d){ return `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}`; }
+function fdate(d){ return `${DAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MON[d.getUTCMonth()]}`; }
+function full(d){ return `${fdate(d)} ${d.getUTCFullYear()} ${ftime(d)} GST`; }
+function p(n){ return String(n).padStart(2,'0'); }
+(function tick(){
+  const n=gst();
+  document.getElementById('ct').textContent=ftime(n).slice(0,5);
+  document.getElementById('cd').textContent=fdate(n);
+  setTimeout(tick,1000);
+})();
+
+// ─────────────────────────────────────────────────
+//  SCREEN & STEP HELPERS
+// ─────────────────────────────────────────────────
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function setStep(active){
+  [1,2,3].forEach(i=>{
+    const el=document.getElementById('si'+i);
+    el.classList.remove('active','done');
+    if(i<active) el.classList.add('done');
+    if(i===active) el.classList.add('active');
+  });
+}
+
+// ─────────────────────────────────────────────────
+//  LOCAL STORAGE — trip state
+//  trip = { phase, scan1:{...}, scan2:{...}, tripId }
+// ─────────────────────────────────────────────────
+function getT(){ try{ const r=localStorage.getItem('aki_t'); if(!r) return null; const t=JSON.parse(r); if(Date.now()-new Date(t.scan1.entryISO).getTime()>86400000){ localStorage.removeItem('aki_t'); return null; } return t; }catch(e){ return null; } }
+function saveT(t){ localStorage.setItem('aki_t',JSON.stringify(t)); }
+function clearT(){ localStorage.removeItem('aki_t'); }
+
+// ─────────────────────────────────────────────────
+//  ON LOAD — resume correct scan
+// ─────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  const t=getT();
+  if(!t){
+    go('s1'); setStep(1); return;
+  }
+  if(t.phase===2){
+    // Scan 1 done, waiting for scan 2 (exit after loading)
+    populateScan2Summary(t.scan1);
+    go('s2'); setStep(2);
+  } else if(t.phase===3){
+    // Scan 2 done, waiting for scan 3 (return)
+    populateScan3(t.scan1, t.scan2);
+    go('s3'); setStep(3);
+    startAwayCounter(t.scan1.entryISO);
+  } else {
+    clearT(); go('s1'); setStep(1);
+  }
+});
+
+// ─────────────────────────────────────────────────
+//  SCAN 1 — ENTRY
+// ─────────────────────────────────────────────────
+function submitScan1(){
+  const plate  = document.getElementById('f-plate').value.trim().toUpperCase();
+  const driver = document.getElementById('f-driver').value.trim();
+  const vendor = document.getElementById('f-vendor').value;
+  const err    = document.getElementById('e1');
+  err.style.display='none';
+
+  if(!plate||!driver||!vendor){
+    err.textContent='Please fill in vehicle plate, driver name, and vendor.';
+    err.style.display='block'; err.scrollIntoView({behavior:'smooth',block:'nearest'}); return;
+  }
+
+  const now=gst();
+  const scan1={ plate, driver, vendor, entryISO:now.toISOString(), entryDisplay:full(now) };
+  const tripId=`TRIP-${plate.replace(/\s/g,'')}-${now.getUTCFullYear()}${p(now.getUTCMonth()+1)}${p(now.getUTCDate())}-${p(now.getUTCHours())}${p(now.getUTCMinutes())}`;
+  const trip={ phase:2, tripId, scan1 };
+  saveT(trip);
+
+  loading(true);
+  post({ action:'entry', tripId, plate, driver, vendor, entryTimestamp:scan1.entryDisplay })
+  .finally(()=>{
+    loading(false);
+    document.getElementById('ok1-rows').innerHTML=rows([
+      ['Time',   scan1.entryDisplay],
+      ['Vehicle',plate],
+      ['Driver', driver],
+      ['Vendor', vendor],
+      ['Trip ID',tripId]
+    ]);
+    go('ok1'); setStep(1);
+  });
+}
+
+// ─────────────────────────────────────────────────
+//  SCAN 2 — EXIT (post-loading)
+// ─────────────────────────────────────────────────
+function populateScan2Summary(s1){
+  document.getElementById('s2-pill').textContent=`${s1.plate} · ${s1.driver} · ${s1.vendor} · Entry: ${s1.entryDisplay.slice(0,19)}`;
+}
+
+function selDept(d){
+  dept=d;
+  document.getElementById('dHC').classList.toggle('on',d==='HC');
+  document.getElementById('dNHC').classList.toggle('on',d==='NHC');
+}
+function selCity(btn){
+  document.querySelectorAll('.cbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); city=btn.textContent.trim();
+}
+
+function submitScan2(){
+  const t=getT(); if(!t){ go('s1'); setStep(1); return; }
+  const route=document.getElementById('f-route').value.trim().toUpperCase();
+  const err=document.getElementById('e2');
+  err.style.display='none';
+
+  if(!route||!dept||!city){
+    err.textContent='Please fill in route number, select department and city.';
+    err.style.display='block'; err.scrollIntoView({behavior:'smooth',block:'nearest'}); return;
+  }
+
+  const now=gst();
+  const scan2={ route, dept, city, exitISO:now.toISOString(), exitDisplay:full(now) };
+  t.scan2=scan2; t.phase=3; saveT(t);
+
+  loading(true);
+  post({ action:'exit', tripId:t.tripId, plate:t.scan1.plate, driver:t.scan1.driver, vendor:t.scan1.vendor, route, dept, city, exitTimestamp:scan2.exitDisplay })
+  .finally(()=>{
+    loading(false);
+    document.getElementById('ok2-rows').innerHTML=rows([
+      ['Time',       scan2.exitDisplay],
+      ['Vehicle',    t.scan1.plate],
+      ['Driver',     t.scan1.driver],
+      ['Vendor',     t.scan1.vendor],
+      ['Route',      route],
+      ['Department', dept],
+      ['City',       city],
+      ['Trip ID',    t.tripId]
+    ]);
+    go('ok2'); setStep(2);
+  });
+}
+
+// ─────────────────────────────────────────────────
+//  SCAN 3 — RETURN
+// ─────────────────────────────────────────────────
+function populateScan3(s1,s2){
+  document.getElementById('r3-plate').textContent  = s1.plate;
+  document.getElementById('r3-driver').textContent = s1.driver;
+  document.getElementById('r3-vendor').textContent = s1.vendor;
+  document.getElementById('r3-route').textContent  = s2.route;
+  document.getElementById('r3-entry').textContent  = s1.entryDisplay.slice(0,19);
+  document.getElementById('r3-exit').textContent   = s2.exitDisplay.slice(0,19);
+  const dEl=document.getElementById('r3-dept');
+  dEl.textContent=s2.dept; dEl.className='tv '+(s2.dept==='HC'?'hc':'nhc');
+  document.getElementById('r3-city').textContent=s2.city;
+}
+
+let awayTimer=null;
+function startAwayCounter(entryISO){
+  function upd(){
+    const ms=Date.now()-new Date(entryISO).getTime();
+    const h=Math.floor(ms/3600000), m=Math.floor((ms%3600000)/60000);
+    const el=document.getElementById('r3-away');
+    if(el) el.textContent=`Time out: ${h>0?h+'h ':''} ${m}m`;
+  }
+  upd(); awayTimer=setInterval(upd,30000);
+}
+
+function submitScan3(){
+  const t=getT(); if(!t){ go('s1'); setStep(1); return; }
+  if(awayTimer) clearInterval(awayTimer);
+
+  const now=gst();
+  const retDisplay=full(now);
+  const totalMs=Date.now()-new Date(t.scan1.entryISO).getTime();
+  const delivMs=Date.now()-new Date(t.scan2.exitISO).getTime();
+  const fmtDur=ms=>{ const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000); return h>0?`${h}h ${m}m`:`${m}m`; };
+  const totalDur=fmtDur(totalMs);
+  const delivDur=fmtDur(delivMs);
+
+  loading(true);
+  post({
+    action:'return',
+    tripId:        t.tripId,
+    plate:         t.scan1.plate,
+    driver:        t.scan1.driver,
+    vendor:        t.scan1.vendor,
+    route:         t.scan2.route,
+    dept:          t.scan2.dept,
+    city:          t.scan2.city,
+    entryTimestamp: t.scan1.entryDisplay,
+    exitTimestamp:  t.scan2.exitDisplay,
+    returnTimestamp:retDisplay,
+    totalDurationHrs: Math.round((totalMs/3600000)*100)/100,
+    delivDurationHrs: Math.round((delivMs/3600000)*100)/100,
+    totalDuration:    totalDur,
+    delivDuration:    delivDur
+  }).finally(()=>{
+    loading(false);
+    clearT();
+    document.getElementById('ok3-dur').textContent=`⏱ Out for delivery: ${delivDur}  ·  Total time: ${totalDur}`;
+    document.getElementById('ok3-rows').innerHTML=rows([
+      ['Vehicle',         t.scan1.plate],
+      ['Driver',          t.scan1.driver],
+      ['Vendor',          t.scan1.vendor],
+      ['Route',           t.scan2.route],
+      ['Department',      t.scan2.dept],
+      ['City',            t.scan2.city],
+      ['Entry time',      t.scan1.entryDisplay.slice(0,19)],
+      ['Exit time',       t.scan2.exitDisplay.slice(0,19)],
+      ['Return time',     retDisplay.slice(0,19)],
+      ['Out for delivery',delivDur],
+      ['Total gate time', totalDur]
+    ]);
+    go('ok3'); setStep(3);
+  });
+}
+
+// ─────────────────────────────────────────────────
+//  UTILITIES
+// ─────────────────────────────────────────────────
+function notMyVehicle(){ clearT(); dept=''; city=''; resetForm(); go('s1'); setStep(1); }
+function resetAll(){ clearT(); dept=''; city=''; resetForm(); go('s1'); setStep(1); }
+function resetForm(){
+  ['f-plate','f-driver','f-route'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  const v=document.getElementById('f-vendor'); if(v) v.value='';
+  document.querySelectorAll('.dbtn').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.cbtn').forEach(b=>b.classList.remove('on'));
+  ['e1','e2','e3'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+}
+function loading(on){ document.getElementById('overlay').classList.toggle('on',on); }
+function rows(pairs){ return pairs.map(([l,v])=>`<div class="trow"><span class="tl">${l}</span><span class="tv">${v}</span></div>`).join(''); }
+async function post(data){
+  try{ await fetch(SCRIPT_URL,{ method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) }); }
+  catch(e){}
+}
+</script>
+</body>
+</html>
