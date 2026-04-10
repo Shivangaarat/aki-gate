@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKI Gate — Daily Report Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800;900&display=swap');
+
+:root {
+  --navy:      #07111F;
+  --navy2:     #0D1E30;
+  --navymid:   #1A3A5C;
+  --teal:      #1D9E75;
+  --teald:     #0F6E56;
+  --teall:     #E1F5EE;
+  --amber:     #EF9F27;
+  --amberd:    #BA7517;
+  --amberl:    #FAEEDA;
+  --blue:      #378ADD;
+  --bluel:     #E6F1FB;
+  --blued:     #0C447C;
+  --green:     #1D9E75;
+  --greenl:    #E1F5EE;
+  --red:       #E24B4A;
+  --redl:      #FCEBEB;
+  --redd:      #791F1F;
+  --text:      #0F1E2D;
+  --muted:     #5A6A7A;
+  --border:    #CDD8E3;
+  --bg:        #F2F5F8;
+  --white:     #fff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ── HEADER ── */
+.hdr {
+  background: var(--navy); padding: 14px 24px;
+  display: flex; align-items: center; gap: 14px;
+}
+.hlogo {
+  width: 40px; height: 40px; background: var(--teal); border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 14px; color: #fff; letter-spacing: 1px;
+}
+.htitle { color: #fff; font-size: 16px; font-weight: 700; }
+.hsub   { color: #6A9EBE; font-size: 11px; margin-top: 1px; }
+.hright { margin-left: auto; text-align: right; }
+.hlive  { font-size: 11px; color: #4A7090; }
+.htime  { color: var(--teal); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 1px; }
+
+/* ── LAYOUT ── */
+.page { display: grid; grid-template-columns: 300px 1fr; gap: 0; min-height: calc(100vh - 64px); }
+
+/* ── LEFT PANEL ── */
+.left { background: var(--white); border-right: 1px solid var(--border); padding: 20px; }
+
+/* ── CALENDAR ── */
+.cal-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+}
+.cal-month { font-family: 'Barlow Condensed', sans-serif; font-size: 17px; font-weight: 700; color: var(--text); }
+.cal-nav {
+  background: none; border: 1px solid var(--border); border-radius: 6px;
+  width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-size: 14px; transition: all .15s;
+}
+.cal-nav:hover { background: var(--bg); color: var(--text); }
+
+.cal-grid { width: 100%; border-collapse: collapse; }
+.cal-grid th {
+  font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--muted); padding: 6px 0; text-align: center;
+}
+.cal-grid td {
+  width: 37px; height: 34px; text-align: center; vertical-align: middle;
+  font-size: 13px; font-weight: 500; color: var(--muted);
+  cursor: pointer; border-radius: 7px; transition: all .14s; position: relative;
+}
+.cal-grid td:hover:not(.empty):not(.other-month) { background: var(--bg); color: var(--text); }
+.cal-grid td.today { color: var(--teal); font-weight: 700; }
+.cal-grid td.has-data::after {
+  content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+  width: 5px; height: 5px; border-radius: 50%; background: var(--teal);
+}
+.cal-grid td.selected {
+  background: var(--navy) !important; color: #fff !important; font-weight: 700;
+}
+.cal-grid td.selected::after { background: var(--teal); }
+.cal-grid td.other-month { color: #C0CEDD; cursor: default; }
+.cal-grid td.empty { cursor: default; }
+
+/* ── QUICK FILTERS ── */
+.qf-section { margin-top: 20px; }
+.qf-label { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display: block; }
+.qf-btns { display: flex; flex-direction: column; gap: 6px; }
+.qf-btn {
+  padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--white); font-family: 'Barlow', sans-serif; font-size: 13px; font-weight: 500;
+  color: var(--muted); cursor: pointer; text-align: left; transition: all .14s;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.qf-btn:hover { background: var(--bg); color: var(--text); }
+.qf-btn.active { background: var(--navy); border-color: var(--navy); color: #fff; }
+.qf-btn .qf-count { font-size: 11px; opacity: .7; }
+
+/* ── DIVIDER ── */
+.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+/* ── LEGEND ── */
+.legend { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.leg-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.leg-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+/* ── RIGHT PANEL ── */
+.right { padding: 20px 24px; }
+
+/* ── DATE TITLE BAR ── */
+.date-bar {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;
+}
+.date-title { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: .5px; }
+.date-sub    { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.export-btn {
+  padding: 8px 16px; background: var(--navy); color: #fff; border: none; border-radius: 8px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .5px;
+  cursor: pointer; transition: all .15s;
+}
+.export-btn:hover { background: var(--navymid); }
+
+/* ── KPI STRIP ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
+.kpi {
+  background: var(--white); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 14px 12px;
+}
+.kpi-val  { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 800; line-height: 1; }
+.kpi-lbl  { font-size: 11px; color: var(--muted); margin-top: 4px; font-weight: 500; letter-spacing: .3px; }
+.kpi-sub  { font-size: 10px; color: var(--muted); margin-top: 2px; opacity: .7; }
+.kpi.teal .kpi-val  { color: var(--teald); }
+.kpi.amber .kpi-val { color: var(--amberd); }
+.kpi.red .kpi-val   { color: var(--red); }
+.kpi.blue .kpi-val  { color: var(--blued); }
+
+/* ── FILTER ROW ── */
+.filter-row {
+  display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center;
+}
+.filter-row label { font-size: 11px; color: var(--muted); font-weight: 600; }
+.filter-chip {
+  padding: 5px 12px; border: 1px solid var(--border); border-radius: 20px;
+  font-size: 12px; font-weight: 600; color: var(--muted); background: var(--white); cursor: pointer; transition: all .14s;
+}
+.filter-chip:hover { border-color: var(--teal); color: var(--teal); }
+.filter-chip.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+.search-input {
+  padding: 5px 12px; border: 1px solid var(--border); border-radius: 20px;
+  font-size: 12px; font-family: 'Barlow', sans-serif; outline: none; width: 160px;
+  background: var(--white); color: var(--text);
+}
+.search-input:focus { border-color: var(--teal); }
+
+/* ── TABLE ── */
+.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; }
+thead tr { background: var(--navy); }
+thead th {
+  padding: 10px 12px; text-align: left; font-size: 10.5px; font-weight: 700;
+  letter-spacing: .8px; text-transform: uppercase; color: #6A9EBE; white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--bg); transition: background .1s; }
+tbody tr:hover { background: #F8FAFB; }
+tbody tr:last-child { border-bottom: none; }
+tbody td { padding: 10px 12px; vertical-align: middle; }
+
+.status-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+.status-pill.entry   { background: var(--teall);  color: var(--teald); }
+.status-pill.exited  { background: var(--amberl); color: var(--amberd); }
+.status-pill.returned{ background: #EAF3DE;        color: #27500A; }
+.status-pill .sdot { width: 6px; height: 6px; border-radius: 50%; }
+.status-pill.entry .sdot   { background: var(--teal); }
+.status-pill.exited .sdot  { background: var(--amber); }
+.status-pill.returned .sdot{ background: #3B6D11; }
+
+.dept-badge {
+  padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700;
+}
+.dept-badge.hc  { background: var(--bluel); color: var(--blued); }
+.dept-badge.nhc { background: var(--amberl); color: var(--amberd); }
+
+.flag-badge { color: var(--red); font-size: 11px; font-weight: 700; }
+
+.time-cell { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: .3px; }
+.dur-cell  { font-weight: 700; color: var(--teald); }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center; padding: 60px 20px;
+  color: var(--muted);
+}
+.empty-state .ei { font-size: 40px; margin-bottom: 12px; opacity: .4; }
+.empty-state h3  { font-size: 16px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+.empty-state p   { font-size: 13px; }
+
+/* ── LOADING ── */
+.loading-row td { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
+.spin-sm {
+  display: inline-block; width: 18px; height: 18px;
+  border: 2px solid var(--border); border-top-color: var(--teal);
+  border-radius: 50%; animation: sp .7s linear infinite; margin-right: 8px; vertical-align: middle;
+}
+@keyframes sp { to { transform: rotate(360deg); } }
+
+/* ── SUMMARY ROW ── */
+.summary-bar {
+  display: flex; gap: 16px; margin-top: 12px; padding: 10px 14px;
+  background: var(--white); border: 1px solid var(--border); border-radius: 8px;
+  font-size: 12px; flex-wrap: wrap;
+}
+.sb-item { display: flex; align-items: center; gap: 6px; }
+.sb-label { color: var(--muted); }
+.sb-val   { font-weight: 700; color: var(--text); }
+
+@media (max-width: 900px) {
+  .page { grid-template-columns: 1fr; }
+  .left { border-right: none; border-bottom: 1px solid var(--border); }
+  .kpi-grid { grid-template-columns: repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hlogo">AKI</div>
+  <div>
+    <div class="htitle">Gate Log — Daily Dashboard</div>
+    <div class="hsub">Al Khayyat Investments — Last Mile Operations</div>
+  </div>
+  <div class="hright">
+    <div class="hlive">GST (UTC+4)</div>
+    <div class="htime" id="hclock">--:--:--</div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- ═══ LEFT: CALENDAR + FILTERS ═══ -->
+  <div class="left">
+
+    <div class="cal-header">
+      <button class="cal-nav" id="prevMonth">&#8249;</button>
+      <div class="cal-month" id="calMonthLabel">— —</div>
+      <button class="cal-nav" id="nextMonth">&#8250;</button>
+    </div>
+
+    <table class="cal-grid" id="calTable">
+      <thead>
+        <tr>
+          <th>Su</th><th>Mo</th><th>Tu</th><th>We</th>
+          <th>Th</th><th>Fr</th><th>Sa</th>
+        </tr>
+      </thead>
+      <tbody id="calBody"></tbody>
+    </table>
+
+    <hr class="divider">
+
+    <span class="qf-label">Quick select</span>
+    <div class="qf-btns">
+      <button class="qf-btn" id="qf-today" onclick="quickSelect('today')">
+        Today <span class="qf-count" id="qc-today">—</span>
+      </button>
+      <button class="qf-btn" id="qf-yesterday" onclick="quickSelect('yesterday')">
+        Yesterday <span class="qf-count" id="qc-yesterday">—</span>
+      </button>
+      <button class="qf-btn" id="qf-week" onclick="quickSelect('week')">
+        This week <span class="qf-count" id="qc-week">—</span>
+      </button>
+    </div>
+
+    <hr class="divider">
+
+    <span class="qf-label">Legend</span>
+    <div class="legend">
+      <div class="leg-row"><div class="leg-dot" style="background:#E1F5EE;border:1px solid #1D9E75;"></div> Entry logged</div>
+      <div class="leg-row"><div class="leg-dot" style="background:#FAEEDA;border:1px solid #EF9F27;"></div> Out for delivery</div>
+      <div class="leg-row"><div class="leg-dot" style="background:#EAF3DE;border:1px solid #3B6D11;"></div> Returned</div>
+      <div class="leg-row"><div class="leg-dot" style="background:#FCEBEB;border:1px solid #E24B4A;"></div> Flagged</div>
+    </div>
+  </div>
+
+  <!-- ═══ RIGHT: DATA VIEW ═══ -->
+  <div class="right">
+
+    <!-- DATE TITLE -->
+    <div class="date-bar">
+      <div>
+        <div class="date-title" id="dateTitle">Select a date</div>
+        <div class="date-sub" id="dateSub">Pick a day from the calendar to view trip data</div>
+      </div>
+      <button class="export-btn" id="exportBtn" onclick="exportCSV()" style="display:none">
+        ↓ Export CSV
+      </button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid" id="kpiGrid" style="display:none">
+      <div class="kpi teal">
+        <div class="kpi-val" id="kpi-total">0</div>
+        <div class="kpi-lbl">Total entries</div>
+      </div>
+      <div class="kpi blue">
+        <div class="kpi-val" id="kpi-returned">0</div>
+        <div class="kpi-lbl">Returned</div>
+        <div class="kpi-sub" id="kpi-returned-sub"></div>
+      </div>
+      <div class="kpi amber">
+        <div class="kpi-val" id="kpi-out">0</div>
+        <div class="kpi-lbl">Still out</div>
+      </div>
+      <div class="kpi red">
+        <div class="kpi-val" id="kpi-flagged">0</div>
+        <div class="kpi-lbl">Flagged</div>
+      </div>
+    </div>
+
+    <!-- SUMMARY BAR -->
+    <div class="summary-bar" id="summaryBar" style="display:none">
+      <div class="sb-item"><span class="sb-label">HC:</span><span class="sb-val" id="sb-hc">—</span></div>
+      <div class="sb-item"><span class="sb-label">NHC:</span><span class="sb-val" id="sb-nhc">—</span></div>
+      <div class="sb-item"><span class="sb-label">Avg duration:</span><span class="sb-val" id="sb-avg">—</span></div>
+      <div class="sb-item"><span class="sb-label">Max duration:</span><span class="sb-val" id="sb-max">—</span></div>
+      <div class="sb-item"><span class="sb-label">Routes:</span><span class="sb-val" id="sb-routes">—</span></div>
+      <div class="sb-item"><span class="sb-label">Cities:</span><span class="sb-val" id="sb-cities">—</span></div>
+    </div>
+
+    <!-- FILTER ROW -->
+    <div class="filter-row" id="filterRow" style="display:none; margin-top:12px;">
+      <label>Filter:</label>
+      <button class="filter-chip on" data-f="all"        onclick="setFilter('all',this)">All</button>
+      <button class="filter-chip"    data-f="ENTRY"      onclick="setFilter('ENTRY',this)">Entry only</button>
+      <button class="filter-chip"    data-f="EXITED"     onclick="setFilter('EXITED',this)">Still out</button>
+      <button class="filter-chip"    data-f="RETURNED"   onclick="setFilter('RETURNED',this)">Returned</button>
+      <button class="filter-chip"    data-f="HC"         onclick="setFilter('HC',this)">HC</button>
+      <button class="filter-chip"    data-f="NHC"        onclick="setFilter('NHC',this)">NHC</button>
+      <button class="filter-chip"    data-f="flagged"    onclick="setFilter('flagged',this)">Flagged only</button>
+      <input class="search-input" id="searchInput" type="text" placeholder="Search plate / driver…" oninput="renderTable()">
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap" id="tableWrap" style="margin-top:10px;">
+      <div class="empty-state">
+        <div class="ei">📅</div>
+        <h3>No date selected</h3>
+        <p>Choose a date from the calendar to view gate log data.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────
+//  CONFIG — same URL as driver form
+// ─────────────────────────────────────────────────
+const SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+
+// ─────────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────────
+let calYear, calMonth;
+let selectedDate = null;   // 'YYYY-MM-DD'
+let allData      = [];     // all fetched rows
+let filteredData = [];
+let datesWithData= new Set();
+let activeFilter = 'all';
+let currentMode  = 'date'; // 'date' | 'week'
+
+// ─────────────────────────────────────────────────
+//  CLOCK
+// ─────────────────────────────────────────────────
+const DAYS  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONS  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MSAB  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function gst(){ return new Date(Date.now()+4*3600000); }
+function p(n){ return String(n).padStart(2,'0'); }
+function fmtFull(d){ return `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}`; }
+function toDateStr(d){ return `${d.getUTCFullYear()}-${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())}`; }
+function todayStr(){ return toDateStr(gst()); }
+function yesterdayStr(){ const d=gst(); d.setUTCDate(d.getUTCDate()-1); return toDateStr(d); }
+
+(function tick(){
+  document.getElementById('hclock').textContent = fmtFull(gst());
+  setTimeout(tick, 1000);
+})();
+
+// ─────────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  const now = gst();
+  calYear  = now.getUTCFullYear();
+  calMonth = now.getUTCMonth();
+
+  await fetchAllData();
+  buildCalendar();
+  updateQuickCounts();
+
+  // Default to today
+  selectDate(todayStr());
+});
+
+// ─────────────────────────────────────────────────
+//  FETCH ALL DATA FROM APPS SCRIPT
+// ─────────────────────────────────────────────────
+async function fetchAllData() {
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=all&limit=5000`);
+    const json = await res.json();
+    allData = json.trips || [];
+    // Build set of dates that have data
+    datesWithData = new Set(
+      allData.map(r => {
+        const ts = String(r['Entry Time (GST)'] || '');
+        // Parse "Fri 10 Apr 2025 08:22:10 GST" or "YYYY-MM-DD ..."
+        return parseDateStr(ts);
+      }).filter(Boolean)
+    );
+  } catch(e) {
+    allData = [];
+    console.error('Fetch error:', e);
+  }
+}
+
+function parseDateStr(ts) {
+  if (!ts) return null;
+  // Try ISO format first: "2025-04-10 ..."
+  const iso = ts.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  // Try "dd Mon yyyy ..." e.g. "10 Apr 2025"
+  const dmy = ts.match(/(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})/);
+  if (dmy) {
+    const m = MSAB.findIndex(x => x.toLowerCase() === dmy[2].toLowerCase()) + 1;
+    if (m > 0) return `${dmy[3]}-${p(m)}-${p(parseInt(dmy[1]))}`;
+  }
+  return null;
+}
+
+function rowMatchesDate(row, dateStr) {
+  const ts = String(row['Entry Time (GST)'] || '');
+  return parseDateStr(ts) === dateStr;
+}
+
+function rowMatchesWeek(row, weekDates) {
+  const ts = String(row['Entry Time (GST)'] || '');
+  const d  = parseDateStr(ts);
+  return weekDates.includes(d);
+}
+
+// ─────────────────────────────────────────────────
+//  CALENDAR
+// ─────────────────────────────────────────────────
+document.getElementById('prevMonth').onclick = () => {
+  calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; }
+  buildCalendar();
+};
+document.getElementById('nextMonth').onclick = () => {
+  calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; }
+  buildCalendar();
+};
+
+function buildCalendar() {
+  document.getElementById('calMonthLabel').textContent = `${MONS[calMonth]} ${calYear}`;
+
+  const tbody   = document.getElementById('calBody');
+  tbody.innerHTML = '';
+
+  const firstDay = new Date(Date.UTC(calYear, calMonth, 1)).getUTCDay();
+  const daysInMonth = new Date(Date.UTC(calYear, calMonth+1, 0)).getUTCDate();
+  const daysInPrev  = new Date(Date.UTC(calYear, calMonth, 0)).getUTCDate();
+  const today = todayStr();
+
+  let cells = [];
+  // Prev month padding
+  for (let i = firstDay-1; i >= 0; i--) {
+    cells.push({ day: daysInPrev-i, month: calMonth-1, year: calMonth===0?calYear-1:calYear, cls: 'other-month' });
+  }
+  // Current month
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push({ day: d, month: calMonth, year: calYear, cls: '' });
+  }
+  // Next month padding
+  while (cells.length % 7 !== 0) {
+    const idx = cells.length - firstDay - daysInMonth + 1;
+    cells.push({ day: idx, month: calMonth+1, year: calMonth===11?calYear+1:calYear, cls: 'other-month' });
+  }
+
+  for (let i = 0; i < cells.length; i += 7) {
+    const tr = document.createElement('tr');
+    for (let j = 0; j < 7; j++) {
+      const c   = cells[i+j];
+      const td  = document.createElement('td');
+      const ds  = `${c.year}-${p(c.month+1)}-${p(c.day)}`;
+      td.textContent = c.day;
+      td.className   = c.cls;
+      if (!c.cls) {
+        if (ds === today) td.classList.add('today');
+        if (datesWithData.has(ds)) td.classList.add('has-data');
+        if (ds === selectedDate) td.classList.add('selected');
+        td.dataset.date = ds;
+        td.onclick = () => selectDate(ds);
+      }
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+}
+
+// ─────────────────────────────────────────────────
+//  SELECT DATE
+// ─────────────────────────────────────────────────
+function selectDate(dateStr) {
+  currentMode = 'date';
+  selectedDate = dateStr;
+
+  // Update calendar highlight
+  document.querySelectorAll('#calBody td').forEach(td => {
+    td.classList.toggle('selected', td.dataset.date === dateStr);
+  });
+
+  // Update quick filter states
+  document.querySelectorAll('.qf-btn').forEach(b => b.classList.remove('active'));
+  if (dateStr === todayStr()) document.getElementById('qf-today').classList.add('active');
+  if (dateStr === yesterdayStr()) document.getElementById('qf-yesterday').classList.add('active');
+
+  // Parse date for display
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const dObj    = new Date(Date.UTC(y,m-1,d));
+  const label   = `${DAYS[dObj.getUTCDay()]}, ${d} ${MONS[m-1]} ${y}`;
+  document.getElementById('dateTitle').textContent = label;
+
+  // Filter data
+  filteredData = allData.filter(r => rowMatchesDate(r, dateStr));
+  activeFilter = 'all';
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('on', c.dataset.f === 'all'));
+  if (document.getElementById('searchInput')) document.getElementById('searchInput').value = '';
+
+  updateKPIs();
+  renderTable();
+  showControls(true);
+}
+
+// ─────────────────────────────────────────────────
+//  QUICK SELECT
+// ─────────────────────────────────────────────────
+function quickSelect(which) {
+  document.querySelectorAll('.qf-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('qf-'+which).classList.add('active');
+
+  if (which === 'today')     return selectDate(todayStr());
+  if (which === 'yesterday') return selectDate(yesterdayStr());
+  if (which === 'week') {
+    currentMode = 'week';
+    const weekDates = getWeekDates();
+    selectedDate = null;
+    document.querySelectorAll('#calBody td').forEach(td => {
+      td.classList.toggle('selected', weekDates.includes(td.dataset.date));
+    });
+    const label = `This week  (${weekDates[0]} → ${weekDates[6]})`;
+    document.getElementById('dateTitle').textContent = label;
+    filteredData = allData.filter(r => rowMatchesWeek(r, weekDates));
+    activeFilter = 'all';
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('on', c.dataset.f === 'all'));
+    if (document.getElementById('searchInput')) document.getElementById('searchInput').value = '';
+    updateKPIs();
+    renderTable();
+    showControls(true);
+  }
+}
+
+function getWeekDates() {
+  const now = gst();
+  const dow = now.getUTCDay();
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(now.getTime());
+    d.setUTCDate(now.getUTCDate() - dow + i);
+    dates.push(toDateStr(d));
+  }
+  return dates;
+}
+
+function updateQuickCounts() {
+  const today = todayStr(), yest = yesterdayStr();
+  const weekDs = getWeekDates();
+  const tc = allData.filter(r=>rowMatchesDate(r,today)).length;
+  const yc = allData.filter(r=>rowMatchesDate(r,yest)).length;
+  const wc = allData.filter(r=>rowMatchesWeek(r,weekDs)).length;
+  document.getElementById('qc-today').textContent     = tc || '';
+  document.getElementById('qc-yesterday').textContent = yc || '';
+  document.getElementById('qc-week').textContent      = wc || '';
+}
+
+// ─────────────────────────────────────────────────
+//  KPIs
+// ─────────────────────────────────────────────────
+function updateKPIs() {
+  const data = filteredData;
+  const total    = data.length;
+  const returned = data.filter(r=>String(r['Status']).toUpperCase()==='RETURNED').length;
+  const out      = data.filter(r=>String(r['Status']).toUpperCase()==='EXITED').length;
+  const flagged  = data.filter(r=>String(r['Flagged']||'').toUpperCase().startsWith('YES')).length;
+  const hc       = data.filter(r=>String(r['Department']||'').toUpperCase()==='HC').length;
+  const nhc      = data.filter(r=>String(r['Department']||'').toUpperCase()==='NHC').length;
+
+  const durs   = data.map(r=>parseFloat(r['Total Gate Hrs'])||0).filter(v=>v>0);
+  const avg    = durs.length ? (durs.reduce((a,b)=>a+b,0)/durs.length).toFixed(1)+'h' : '—';
+  const max    = durs.length ? Math.max(...durs).toFixed(1)+'h' : '—';
+  const routes = [...new Set(data.map(r=>r['Route']).filter(Boolean))].length;
+  const cities = [...new Set(data.map(r=>r['City']).filter(Boolean))].length;
+
+  document.getElementById('kpi-total').textContent    = total;
+  document.getElementById('kpi-returned').textContent = returned;
+  document.getElementById('kpi-returned-sub').textContent = total > 0 ? Math.round(returned/total*100)+'% completion' : '';
+  document.getElementById('kpi-out').textContent      = out;
+  document.getElementById('kpi-flagged').textContent  = flagged;
+  document.getElementById('sb-hc').textContent        = hc;
+  document.getElementById('sb-nhc').textContent       = nhc;
+  document.getElementById('sb-avg').textContent       = avg;
+  document.getElementById('sb-max').textContent       = max;
+  document.getElementById('sb-routes').textContent    = routes;
+  document.getElementById('sb-cities').textContent    = cities;
+}
+
+// ─────────────────────────────────────────────────
+//  FILTER
+// ─────────────────────────────────────────────────
+function setFilter(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('on'));
+  btn.classList.add('on');
+  renderTable();
+}
+
+function getFilteredRows() {
+  const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+  return filteredData.filter(r => {
+    const st = String(r['Status']||'').toUpperCase();
+    const dept = String(r['Department']||'').toUpperCase();
+    const fl = String(r['Flagged']||'').toUpperCase();
+
+    if (activeFilter === 'ENTRY'    && st !== 'ENTRY')    return false;
+    if (activeFilter === 'EXITED'   && st !== 'EXITED')   return false;
+    if (activeFilter === 'RETURNED' && st !== 'RETURNED') return false;
+    if (activeFilter === 'HC'  && dept !== 'HC')  return false;
+    if (activeFilter === 'NHC' && dept !== 'NHC') return false;
+    if (activeFilter === 'flagged' && !fl.startsWith('YES')) return false;
+
+    if (search) {
+      const hay = [r['Plate'],r['Driver'],r['Vendor'],r['Route'],r['City']].join(' ').toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+}
+
+// ─────────────────────────────────────────────────
+//  RENDER TABLE
+// ─────────────────────────────────────────────────
+function renderTable() {
+  const rows = getFilteredRows();
+  const wrap = document.getElementById('tableWrap');
+
+  if (rows.length === 0 && filteredData.length === 0) {
+    wrap.innerHTML = `<div class="empty-state"><div class="ei">🗂</div><h3>No data for this date</h3><p>No gate log entries were recorded on the selected date.</p></div>`;
+    return;
+  }
+  if (rows.length === 0) {
+    wrap.innerHTML = `<div class="empty-state"><div class="ei">🔍</div><h3>No matching entries</h3><p>Try clearing the filter or search.</p></div>`;
+    return;
+  }
+
+  const tHead = `<thead><tr>
+    <th>#</th>
+    <th>Plate</th>
+    <th>Driver</th>
+    <th>Vendor</th>
+    <th>Route</th>
+    <th>Dept</th>
+    <th>City</th>
+    <th>Entry</th>
+    <th>Exit</th>
+    <th>Return</th>
+    <th>Delivery</th>
+    <th>Total</th>
+    <th>Status</th>
+    <th>Flag</th>
+  </tr></thead>`;
+
+  const tBody = rows.map((r, i) => {
+    const st      = String(r['Status']||'').toUpperCase();
+    const dept    = String(r['Department']||'').toUpperCase();
+    const flagged = String(r['Flagged']||'').toUpperCase().startsWith('YES');
+    const bgStyle = flagged ? 'background:#FFF5F5;' : '';
+
+    const statusPill = st === 'ENTRY'
+      ? `<span class="status-pill entry"><span class="sdot"></span>Entry</span>`
+      : st === 'EXITED'
+      ? `<span class="status-pill exited"><span class="sdot"></span>Out</span>`
+      : st === 'RETURNED'
+      ? `<span class="status-pill returned"><span class="sdot"></span>Returned</span>`
+      : `<span style="color:var(--muted);font-size:12px;">${r['Status']||'—'}</span>`;
+
+    const deptBadge = dept === 'HC'
+      ? `<span class="dept-badge hc">HC</span>`
+      : dept === 'NHC'
+      ? `<span class="dept-badge nhc">NHC</span>`
+      : dept ? `<span style="font-size:12px;color:var(--muted);">${dept}</span>` : '—';
+
+    const fmtTime = ts => {
+      if (!ts) return '<span style="color:var(--muted)">—</span>';
+      const s = String(ts);
+      // Extract HH:MM from various formats
+      const m = s.match(/(\d{2}:\d{2}):\d{2}/);
+      return m ? `<span class="time-cell">${m[1]}</span>` : `<span class="time-cell">${s.slice(0,5)}</span>`;
+    };
+
+    const fmtDur = v => {
+      if (!v) return '<span style="color:var(--muted)">—</span>';
+      const n = parseFloat(v);
+      if (isNaN(n)) return v;
+      const h = Math.floor(n), m = Math.round((n-h)*60);
+      return `<span class="dur-cell">${h > 0 ? h+'h ' : ''}${m}m</span>`;
+    };
+
+    return `<tr style="${bgStyle}">
+      <td style="color:var(--muted);font-size:12px;">${i+1}</td>
+      <td style="font-weight:700;">${r['Plate']||'—'}</td>
+      <td>${r['Driver']||'—'}</td>
+      <td style="color:var(--muted);font-size:12px;">${r['Vendor']||'—'}</td>
+      <td style="font-weight:600;">${r['Route']||'—'}</td>
+      <td>${deptBadge}</td>
+      <td>${r['City']||'—'}</td>
+      <td>${fmtTime(r['Entry Time (GST)'])}</td>
+      <td>${fmtTime(r['Exit Time (GST)'])}</td>
+      <td>${fmtTime(r['Return Time (GST)'])}</td>
+      <td>${fmtDur(r['Out-for-Delivery Hrs'])}</td>
+      <td>${fmtDur(r['Total Gate Hrs'])}</td>
+      <td>${statusPill}</td>
+      <td>${flagged ? '<span class="flag-badge">⚑ Flagged</span>' : ''}</td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `<table>${tHead}<tbody>${tBody}</tbody></table>`;
+}
+
+// ─────────────────────────────────────────────────
+//  SHOW/HIDE CONTROLS
+// ─────────────────────────────────────────────────
+function showControls(on) {
+  document.getElementById('kpiGrid').style.display    = on ? 'grid'  : 'none';
+  document.getElementById('summaryBar').style.display = on ? 'flex'  : 'none';
+  document.getElementById('filterRow').style.display  = on ? 'flex'  : 'none';
+  document.getElementById('exportBtn').style.display  = on ? 'block' : 'none';
+}
+
+// ─────────────────────────────────────────────────
+//  EXPORT CSV
+// ─────────────────────────────────────────────────
+function exportCSV() {
+  const rows = getFilteredRows();
+  if (!rows.length) return;
+
+  const cols = ['Trip ID','Plate','Driver','Vendor','Route','Department','City',
+    'Entry Time (GST)','Exit Time (GST)','Return Time (GST)',
+    'Out-for-Delivery Hrs','Total Gate Hrs','Status','Flagged'];
+
+  const esc = v => { const s=String(v??''); return (s.includes(',')||s.includes('"')||s.includes('\n'))?`"${s.replace(/"/g,'""')}"`:s; };
+  const csv = [cols.map(esc).join(','), ...rows.map(r=>cols.map(c=>esc(r[c]||'')).join(','))].join('\r\n');
+
+  const label = selectedDate || 'week';
+  const blob  = new Blob([csv], {type:'text/csv'});
+  const a     = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `AKI_Gate_${label}.csv`;
+  a.click();
+}
+</script>
+</body>
+</html>
