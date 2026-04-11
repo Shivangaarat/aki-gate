@@ -167,13 +167,13 @@ hr{border:none;border-top:1px solid var(--border);margin:18px 0;}
   <div class="field"><label>Driver Name *</label>
     <input id="f-driver" type="text" placeholder="Full name" autocomplete="off">
   </div>
-  <div class="field"><label>Vendor / Transporter *</label>
+  <div class="field">
+    <label style="display:flex;justify-content:space-between;align-items:center;">
+      Vendor / Transporter *
+      <button onclick="openVendorMgr()" style="background:none;border:none;font-size:10px;font-weight:700;color:var(--teal);cursor:pointer;letter-spacing:.5px;text-transform:uppercase;padding:0;">+ Manage vendors</button>
+    </label>
     <select id="f-vendor">
       <option value="">— Select vendor —</option>
-      <option>Al Futtaim Logistics</option><option>Aramex</option><option>Barloworld Transport</option>
-      <option>DHL Supply Chain</option><option>GAC Logistics</option><option>Imdaad</option>
-      <option>Jeena & Company</option><option>Naqel Express</option><option>RSA Logistics</option>
-      <option>Tristar Group</option><option>Other (adhoc)</option>
     </select>
   </div>
   <div class="err" id="e1"></div>
@@ -275,10 +275,119 @@ hr{border:none;border-top:1px solid var(--border);margin:18px 0;}
   </div>
 </div>
 
+<!-- ══ VENDOR MANAGER OVERLAY ══ -->
+<div id="vendor-mgr" style="display:none;position:fixed;inset:0;background:rgba(7,17,31,.7);z-index:200;align-items:flex-end;justify-content:center;">
+  <div style="background:var(--white);border-radius:18px 18px 0 0;width:100%;max-width:480px;padding:24px 20px 40px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--text);">Manage Vendors</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Add or remove vendors from the list</div>
+      </div>
+      <button onclick="closeVendorMgr()" style="background:var(--bg);border:none;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;color:var(--muted);">✕</button>
+    </div>
+
+    <!-- Add new vendor -->
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <input id="new-vendor-input" type="text" placeholder="Type vendor name and press Add"
+        style="flex:1;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;font-family:'Barlow',sans-serif;font-size:14px;outline:none;"
+        onkeydown="if(event.key==='Enter')addVendor()"
+        onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='var(--border)'">
+      <button onclick="addVendor()"
+        style="padding:11px 18px;background:var(--teal);color:#fff;border:none;border-radius:9px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">
+        + Add
+      </button>
+    </div>
+
+    <!-- Vendor list -->
+    <div id="vendor-list"></div>
+
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);text-align:center;">
+      Vendors are saved on this device. All changes take effect immediately.
+    </div>
+  </div>
+</div>
+
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwYyXfZ29wOCsuZV0AbIjnSmypIDNi4FcAXjjyIJq4V02x2G_22dVXhrP5uuF8JUrNo/exec';
 
 let dept='', city='';
+
+// ── VENDOR STORAGE ──
+function getVendors(){
+  try{
+    const v=localStorage.getItem('aki_vendors');
+    return v ? JSON.parse(v) : [];
+  }catch(e){return [];}
+}
+function saveVendors(list){localStorage.setItem('aki_vendors',JSON.stringify(list));}
+
+function buildVendorSelect(){
+  const sel=document.getElementById('f-vendor');
+  const vendors=getVendors();
+  const current=sel.value;
+  sel.innerHTML='<option value="">— Select vendor —</option>';
+  vendors.forEach(v=>{
+    const o=document.createElement('option');
+    o.value=v; o.textContent=v;
+    sel.appendChild(o);
+  });
+  if(current) sel.value=current;
+}
+
+function renderVendorList(){
+  const vendors=getVendors();
+  const el=document.getElementById('vendor-list');
+  if(!vendors.length){
+    el.innerHTML=`<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;">No vendors added yet.<br>Type a vendor name above and click Add.</div>`;
+    return;
+  }
+  el.innerHTML=vendors.map((v,i)=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;
+      background:var(--bg);border-radius:9px;margin-bottom:7px;">
+      <span style="font-size:14px;font-weight:500;color:var(--text);">${v}</span>
+      <button onclick="removeVendor(${i})"
+        style="background:var(--redl);border:1px solid var(--red);color:#791F1F;
+          border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;">
+        Remove
+      </button>
+    </div>`).join('');
+}
+
+function addVendor(){
+  const inp=document.getElementById('new-vendor-input');
+  const name=inp.value.trim();
+  if(!name) return;
+  const vendors=getVendors();
+  if(vendors.some(v=>v.toLowerCase()===name.toLowerCase())){
+    inp.style.borderColor='var(--red)';
+    setTimeout(()=>inp.style.borderColor='var(--border)',1500);
+    return;
+  }
+  vendors.push(name);
+  saveVendors(vendors);
+  inp.value='';
+  renderVendorList();
+  buildVendorSelect();
+}
+
+function removeVendor(idx){
+  const vendors=getVendors();
+  vendors.splice(idx,1);
+  saveVendors(vendors);
+  renderVendorList();
+  buildVendorSelect();
+}
+
+function openVendorMgr(){
+  renderVendorList();
+  const mgr=document.getElementById('vendor-mgr');
+  mgr.style.display='flex';
+  setTimeout(()=>document.getElementById('new-vendor-input').focus(),200);
+}
+function closeVendorMgr(){
+  document.getElementById('vendor-mgr').style.display='none';
+}
+
 
 // ── CLOCK ──
 const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -304,6 +413,7 @@ function clearT(){localStorage.removeItem('aki_t');}
 // 1. No saved trip OR phase 1/2 → show entry (fresh start)
 // 2. Phase 3 (exit done, awaiting return scan) → show return screen
 window.addEventListener('DOMContentLoaded',()=>{
+  buildVendorSelect();
   const t=getT();
   if(t && t.phase===3){
     // Driver has scanned QR after delivery — show return confirm
