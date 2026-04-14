@@ -52,11 +52,32 @@ body { font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--te
 .htime  { color: var(--teal); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 1px; }
 
 /* ── LAYOUT ── */
-.page { display: grid; grid-template-columns: 300px 1fr; gap: 0; min-height: calc(100vh - 64px); align-items: start; }
+.page {
+  display: flex;
+  flex-direction: row;
+  min-height: calc(100vh - 64px);
+  align-items: stretch;
+}
 
 /* ── LEFT PANEL ── */
-.left { background: var(--white); border-right: 1px solid var(--border); padding: 20px; min-width: 0; overflow-x: hidden; }
-.right { padding: 20px 24px; min-width: 0; overflow: hidden; width: 100%; }
+.left {
+  width: 300px;
+  flex: 0 0 300px;
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  padding: 20px;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* ── RIGHT PANEL ── */
+.right {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 20px 24px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
 
 /* ── CALENDAR ── */
 .cal-header {
@@ -234,7 +255,7 @@ tbody td { padding: 10px 12px; vertical-align: middle; }
 }
 
 @media (max-width: 900px) {
-  .page { grid-template-columns: 1fr; }
+  .page { flex-direction: column; }
   .left { border-right: none; border-bottom: 1px solid var(--border); }
   .kpi-grid { grid-template-columns: repeat(2,1fr); }
 }
