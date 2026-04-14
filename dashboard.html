@@ -226,6 +226,13 @@ tbody td { padding: 10px 12px; vertical-align: middle; }
 .sb-label { color: var(--muted); }
 .sb-val   { font-weight: 700; color: var(--text); }
 
+/* ── ERROR BANNER ── */
+.error-banner {
+  background: var(--redl); border: 1px solid var(--red); border-radius: 8px;
+  padding: 10px 14px; margin-bottom: 14px; font-size: 12px; color: var(--redd);
+  display: none;
+}
+
 @media (max-width: 900px) {
   .page { grid-template-columns: 1fr; }
   .left { border-right: none; border-bottom: 1px solid var(--border); }
@@ -298,6 +305,9 @@ tbody td { padding: 10px 12px; vertical-align: middle; }
   <!-- ═══ RIGHT: DATA VIEW ═══ -->
   <div class="right">
 
+    <!-- ERROR BANNER -->
+    <div class="error-banner" id="errorBanner"></div>
+
     <!-- DATE TITLE -->
     <div class="date-bar">
       <div>
@@ -367,20 +377,20 @@ tbody td { padding: 10px 12px; vertical-align: middle; }
 
 <script>
 // ─────────────────────────────────────────────────
-//  CONFIG — same URL as driver form
+//  CONFIG
 // ─────────────────────────────────────────────────
-const SCRIPT_URL = 'ttps://script.google.com/macros/s/AKfycbwYyXfZ29wOCsuZV0AbIjnSmypIDNi4FcAXjjyIJq4V02x2G_22dVXhrP5uuF8JUrNo/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwYyXfZ29wOCsuZV0AbIjnSmypIDNi4FcAXjjyIJq4V02x2G_22dVXhrP5uuF8JUrNo/exec';
 
 // ─────────────────────────────────────────────────
 //  STATE
 // ─────────────────────────────────────────────────
 let calYear, calMonth;
-let selectedDate = null;   // 'YYYY-MM-DD'
-let allData      = [];     // all fetched rows
+let selectedDate = null;
+let allData      = [];
 let filteredData = [];
 let datesWithData= new Set();
 let activeFilter = 'all';
-let currentMode  = 'date'; // 'date' | 'week'
+let currentMode  = 'date';
 
 // ─────────────────────────────────────────────────
 //  CLOCK
@@ -408,13 +418,22 @@ window.addEventListener('DOMContentLoaded', async () => {
   calYear  = now.getUTCFullYear();
   calMonth = now.getUTCMonth();
 
+  buildCalendar();
+  showLoadingState();
   await fetchAllData();
   buildCalendar();
   updateQuickCounts();
-
-  // Default to today
   selectDate(todayStr());
 });
+
+function showLoadingState() {
+  document.getElementById('tableWrap').innerHTML = `
+    <div class="empty-state">
+      <div class="ei"><span class="spin-sm"></span></div>
+      <h3>Loading data…</h3>
+      <p>Fetching gate log from Google Sheets.</p>
+    </div>`;
+}
 
 // ─────────────────────────────────────────────────
 //  FETCH ALL DATA FROM APPS SCRIPT
@@ -422,28 +441,36 @@ window.addEventListener('DOMContentLoaded', async () => {
 async function fetchAllData() {
   try {
     const res  = await fetch(`${SCRIPT_URL}?action=all&limit=5000`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
     allData = json.trips || [];
-    // Build set of dates that have data
     datesWithData = new Set(
       allData.map(r => {
         const ts = String(r['Entry Time (GST)'] || '');
-        // Parse "Fri 10 Apr 2025 08:22:10 GST" or "YYYY-MM-DD ..."
         return parseDateStr(ts);
       }).filter(Boolean)
     );
+    hideError();
   } catch(e) {
     allData = [];
+    showError(`Could not load data: ${e.message}. Check that the Apps Script URL is deployed and accessible.`);
     console.error('Fetch error:', e);
   }
 }
 
+function showError(msg) {
+  const el = document.getElementById('errorBanner');
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+}
+function hideError() {
+  document.getElementById('errorBanner').style.display = 'none';
+}
+
 function parseDateStr(ts) {
   if (!ts) return null;
-  // Try ISO format first: "2025-04-10 ..."
   const iso = ts.match(/(\d{4})-(\d{2})-(\d{2})/);
   if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
-  // Try "dd Mon yyyy ..." e.g. "10 Apr 2025"
   const dmy = ts.match(/(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})/);
   if (dmy) {
     const m = MSAB.findIndex(x => x.toLowerCase() === dmy[2].toLowerCase()) + 1;
@@ -481,21 +508,18 @@ function buildCalendar() {
   const tbody   = document.getElementById('calBody');
   tbody.innerHTML = '';
 
-  const firstDay = new Date(Date.UTC(calYear, calMonth, 1)).getUTCDay();
+  const firstDay    = new Date(Date.UTC(calYear, calMonth, 1)).getUTCDay();
   const daysInMonth = new Date(Date.UTC(calYear, calMonth+1, 0)).getUTCDate();
   const daysInPrev  = new Date(Date.UTC(calYear, calMonth, 0)).getUTCDate();
   const today = todayStr();
 
   let cells = [];
-  // Prev month padding
   for (let i = firstDay-1; i >= 0; i--) {
     cells.push({ day: daysInPrev-i, month: calMonth-1, year: calMonth===0?calYear-1:calYear, cls: 'other-month' });
   }
-  // Current month
   for (let d = 1; d <= daysInMonth; d++) {
     cells.push({ day: d, month: calMonth, year: calYear, cls: '' });
   }
-  // Next month padding
   while (cells.length % 7 !== 0) {
     const idx = cells.length - firstDay - daysInMonth + 1;
     cells.push({ day: idx, month: calMonth+1, year: calMonth===11?calYear+1:calYear, cls: 'other-month' });
@@ -526,30 +550,28 @@ function buildCalendar() {
 //  SELECT DATE
 // ─────────────────────────────────────────────────
 function selectDate(dateStr) {
-  currentMode = 'date';
+  currentMode  = 'date';
   selectedDate = dateStr;
 
-  // Update calendar highlight
   document.querySelectorAll('#calBody td').forEach(td => {
     td.classList.toggle('selected', td.dataset.date === dateStr);
   });
 
-  // Update quick filter states
   document.querySelectorAll('.qf-btn').forEach(b => b.classList.remove('active'));
-  if (dateStr === todayStr()) document.getElementById('qf-today').classList.add('active');
+  if (dateStr === todayStr())     document.getElementById('qf-today').classList.add('active');
   if (dateStr === yesterdayStr()) document.getElementById('qf-yesterday').classList.add('active');
 
-  // Parse date for display
   const [y,m,d] = dateStr.split('-').map(Number);
   const dObj    = new Date(Date.UTC(y,m-1,d));
   const label   = `${DAYS[dObj.getUTCDay()]}, ${d} ${MONS[m-1]} ${y}`;
   document.getElementById('dateTitle').textContent = label;
+  document.getElementById('dateSub').textContent   = 'Gate log entries for the selected date';
 
-  // Filter data
   filteredData = allData.filter(r => rowMatchesDate(r, dateStr));
   activeFilter = 'all';
   document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('on', c.dataset.f === 'all'));
-  if (document.getElementById('searchInput')) document.getElementById('searchInput').value = '';
+  const si = document.getElementById('searchInput');
+  if (si) si.value = '';
 
   updateKPIs();
   renderTable();
@@ -566,18 +588,26 @@ function quickSelect(which) {
   if (which === 'today')     return selectDate(todayStr());
   if (which === 'yesterday') return selectDate(yesterdayStr());
   if (which === 'week') {
-    currentMode = 'week';
-    const weekDates = getWeekDates();
+    currentMode  = 'week';
     selectedDate = null;
+    const weekDates = getWeekDates();
+
     document.querySelectorAll('#calBody td').forEach(td => {
       td.classList.toggle('selected', weekDates.includes(td.dataset.date));
     });
-    const label = `This week  (${weekDates[0]} → ${weekDates[6]})`;
-    document.getElementById('dateTitle').textContent = label;
+
+    const [fy,fm,fd] = weekDates[0].split('-').map(Number);
+    const [ty,tm,td2] = weekDates[6].split('-').map(Number);
+    document.getElementById('dateTitle').textContent =
+      `This week  (${fd} ${MSAB[fm-1]} → ${td2} ${MSAB[tm-1]})`;
+    document.getElementById('dateSub').textContent = 'All gate log entries for the current week';
+
     filteredData = allData.filter(r => rowMatchesWeek(r, weekDates));
     activeFilter = 'all';
     document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('on', c.dataset.f === 'all'));
-    if (document.getElementById('searchInput')) document.getElementById('searchInput').value = '';
+    const si = document.getElementById('searchInput');
+    if (si) si.value = '';
+
     updateKPIs();
     renderTable();
     showControls(true);
@@ -611,7 +641,7 @@ function updateQuickCounts() {
 //  KPIs
 // ─────────────────────────────────────────────────
 function updateKPIs() {
-  const data = filteredData;
+  const data     = filteredData;
   const total    = data.length;
   const returned = data.filter(r=>String(r['Status']).toUpperCase()==='RETURNED').length;
   const out      = data.filter(r=>String(r['Status']).toUpperCase()==='EXITED').length;
@@ -619,9 +649,9 @@ function updateKPIs() {
   const hc       = data.filter(r=>String(r['Department']||'').toUpperCase()==='HC').length;
   const nhc      = data.filter(r=>String(r['Department']||'').toUpperCase()==='NHC').length;
 
-  const durs   = data.map(r=>parseFloat(r['Total Gate Hrs'])||0).filter(v=>v>0);
-  const avg    = durs.length ? (durs.reduce((a,b)=>a+b,0)/durs.length).toFixed(1)+'h' : '—';
-  const max    = durs.length ? Math.max(...durs).toFixed(1)+'h' : '—';
+  const durs = data.map(r=>parseFloat(r['Total Gate Hrs'])||0).filter(v=>v>0);
+  const avg  = durs.length ? (durs.reduce((a,b)=>a+b,0)/durs.length).toFixed(1)+'h' : '—';
+  const max  = durs.length ? Math.max(...durs).toFixed(1)+'h' : '—';
   const routes = [...new Set(data.map(r=>r['Route']).filter(Boolean))].length;
   const cities = [...new Set(data.map(r=>r['City']).filter(Boolean))].length;
 
@@ -651,9 +681,9 @@ function setFilter(f, btn) {
 function getFilteredRows() {
   const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
   return filteredData.filter(r => {
-    const st = String(r['Status']||'').toUpperCase();
+    const st   = String(r['Status']||'').toUpperCase();
     const dept = String(r['Department']||'').toUpperCase();
-    const fl = String(r['Flagged']||'').toUpperCase();
+    const fl   = String(r['Flagged']||'').toUpperCase();
 
     if (activeFilter === 'ENTRY'    && st !== 'ENTRY')    return false;
     if (activeFilter === 'EXITED'   && st !== 'EXITED')   return false;
@@ -687,20 +717,9 @@ function renderTable() {
   }
 
   const tHead = `<thead><tr>
-    <th>#</th>
-    <th>Plate</th>
-    <th>Driver</th>
-    <th>Vendor</th>
-    <th>Route</th>
-    <th>Dept</th>
-    <th>City</th>
-    <th>Entry</th>
-    <th>Exit</th>
-    <th>Return</th>
-    <th>Delivery</th>
-    <th>Total</th>
-    <th>Status</th>
-    <th>Flag</th>
+    <th>#</th><th>Plate</th><th>Driver</th><th>Vendor</th><th>Route</th>
+    <th>Dept</th><th>City</th><th>Entry</th><th>Exit</th><th>Return</th>
+    <th>Delivery</th><th>Total</th><th>Status</th><th>Flag</th>
   </tr></thead>`;
 
   const tBody = rows.map((r, i) => {
@@ -726,7 +745,6 @@ function renderTable() {
     const fmtTime = ts => {
       if (!ts) return '<span style="color:var(--muted)">—</span>';
       const s = String(ts);
-      // Extract HH:MM from various formats
       const m = s.match(/(\d{2}:\d{2}):\d{2}/);
       return m ? `<span class="time-cell">${m[1]}</span>` : `<span class="time-cell">${s.slice(0,5)}</span>`;
     };
