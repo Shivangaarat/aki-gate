@@ -52,10 +52,11 @@ body { font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--te
 .htime  { color: var(--teal); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 1px; }
 
 /* ── LAYOUT ── */
-.page { display: grid; grid-template-columns: 300px 1fr; gap: 0; min-height: calc(100vh - 64px); }
+.page { display: grid; grid-template-columns: 300px 1fr; gap: 0; min-height: calc(100vh - 64px); align-items: start; }
 
 /* ── LEFT PANEL ── */
-.left { background: var(--white); border-right: 1px solid var(--border); padding: 20px; }
+.left { background: var(--white); border-right: 1px solid var(--border); padding: 20px; min-width: 0; overflow-x: hidden; }
+.right { padding: 20px 24px; min-width: 0; overflow: hidden; width: 100%; }
 
 /* ── CALENDAR ── */
 .cal-header {
@@ -69,13 +70,13 @@ body { font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--te
 }
 .cal-nav:hover { background: var(--bg); color: var(--text); }
 
-.cal-grid { width: 100%; border-collapse: collapse; }
+.cal-grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .cal-grid th {
   font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
   color: var(--muted); padding: 6px 0; text-align: center;
 }
 .cal-grid td {
-  width: 37px; height: 34px; text-align: center; vertical-align: middle;
+  width: 14.28%; height: 34px; max-width: 37px; text-align: center; vertical-align: middle;
   font-size: 13px; font-weight: 500; color: var(--muted);
   cursor: pointer; border-radius: 7px; transition: all .14s; position: relative;
 }
@@ -115,7 +116,6 @@ body { font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--te
 .leg-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
 
 /* ── RIGHT PANEL ── */
-.right { padding: 20px 24px; }
 
 /* ── DATE TITLE BAR ── */
 .date-bar {
